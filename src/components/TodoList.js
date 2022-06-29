@@ -1,44 +1,81 @@
-import react, {useState} from 'react'
-import Todo from './Todo'
-import TodoForm from './TodoForm'
+import React, { useState,useEffect } from "react";
+import DeleteIcon from "@material-ui/icons/Delete";
 
-function TodoList() {
-    const [todos,  setTodos] = useState([])
+//fetch data from local storage
+const getData = () => {
+  let list = localStorage.getItem("lists");
+  console.log(JSON.parse(list));
+  if (list) {
+    return JSON.parse(localStorage.getItem("lists"));
+  } else return [];
+};
 
-    function addTodo(todo) {
-        if(!todo.text || /^\s*$/.test(todo.text)) {
-            return
-        }
+export default function TodoList() {
+  const [inputData, setInputData] = useState("");
+  const [items, setItems] = useState(getData);
 
-        const newTodos = [todo, ...todos]
+  //handling change
+  const handleChange = (e) => {
+    setInputData(e.target.value);
+    console.log("changed");
+  };
 
-        setTodos(newTodos)
+  //add items to an array
+  const addItem = (e) => {
+    e.preventDefault();
+    if (inputData) {
+      setItems([inputData, ...items]);
+      console.log(items);
+      setInputData("");
     }
+  };
+  //delete items once task complete
+  const deleteItem = (index) => {
+    const itemList = items.filter((item,id) => {
+      return id != index;
+    });
+    setItems(itemList);
+  };
 
-    function removeTodo(id) {
-        const removedArr = [...todos].filter(todo => todo.id !== id);
-    
-        setTodos(removedArr);
-      };
-
-    function completeTodo(id) {
-        let updatedTodos = todos.map(todo => {
-          return todo;
-        });
-        setTodos(updatedTodos);
-      };
+  //add data to local storage
+  useEffect(() => {
+    localStorage.setItem("lists", JSON.stringify(items));
+  }, [items]);
 
 
-    return (
-        <div>
-            <TodoForm onSubmit={addTodo}/>
-            <Todo
-                 todos={todos}
-                 completeTodo={completeTodo}
-                 removeTodo={removeTodo}
-            />
-        </div>
-    )
+  return (
+    <>
+
+      <div>
+        <form className="todoForm">
+          <input
+            type="text"
+            placeholder="What to do?"
+            value={inputData}
+            name="text"
+            className="todoInput"
+            onChange={handleChange}
+          />
+          <button className="todoButton" onClick={addItem}>
+            Add
+          </button>
+        </form>
+      </div>
+
+      {items.map((task, index) => {
+        return (
+          <div className="todoList">
+            <div key={index}>{task}</div>
+            <div className="icons">
+              <DeleteIcon
+                className="deleteIcon"
+                onClick={() => deleteItem(index)}
+              />
+            </div>
+          </div>
+        );
+      })}
+
+    </>
+  );
 }
-
-export default TodoList
